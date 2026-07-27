@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oil Fever '89 — shell reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#0d0d14;font-family:'Silkscreen',monospace;}
+a{color:#f0c838;text-decoration:none;}a:hover{color:#ffffff;}
+*{box-sizing:border-box;}
+.stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;background:radial-gradient(ellipse at 50% 20%, #191926 0%, #0d0d14 70%);}
+.cabinet{background:linear-gradient(180deg,#e2dac6,#c6bda6);border-radius:16px;padding:20px 20px 8px 20px;box-shadow:0 34px 90px rgba(0,0,0,0.65), inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -3px 0 rgba(0,0,0,0.18);}
+.screen{position:relative;width:960px;height:640px;background:#000;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 3px #15151a, inset 0 0 40px rgba(0,0,0,0.85);}
+.crt{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg, rgba(0,0,0,0.22) 0px, rgba(0,0,0,0.22) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px);z-index:50;}
+.nameplate{display:flex;align-items:center;justify-content:space-between;padding:9px 6px 3px 6px;}
+.nameplate .label{font-size:10px;color:#7a7260;letter-spacing:2px;}
+.power{display:flex;align-items:center;gap:8px;}
+.led{width:10px;height:10px;background:#39d353;border-radius:50%;box-shadow:0 0 8px #39d353;}
+.power .label{font-size:9px;color:#7a7260;letter-spacing:2px;}
+
+/* ---- menu ---- */
+.menu{width:100%;height:100%;background:#2038a8;display:flex;flex-direction:column;align-items:center;padding:0 40px 20px 40px;}
+.banner-wrap{position:relative;flex:none;width:960px;}
+#bannerCanvas{display:block;width:960px;height:222px;image-rendering:pixelated;}
+.wordmark{position:absolute;left:0;top:40px;width:100%;text-align:center;}
+.wordmark h1{margin:0;font-size:56px;font-weight:700;color:#f0c838;letter-spacing:6px;line-height:1;text-shadow:3px 3px 0 #a02418, 6px 6px 0 rgba(6,4,16,0.6);}
+.wordmark .sub{margin-top:12px;font-size:12px;color:#fff;letter-spacing:5px;text-shadow:2px 2px 0 rgba(6,4,16,0.7);}
+.tiles{display:flex;flex-direction:column;gap:11px;width:470px;margin-top:16px;}
+.btn3d{background:#a8a8ac;border-top:3px solid #fff;border-left:3px solid #fff;border-bottom:3px solid #40404a;border-right:3px solid #40404a;cursor:pointer;}
+.btn3d:hover{background:#bcbcc4;}
+.btn3d:active{background:#8e8e96;border-top-color:#40404a;border-left-color:#40404a;border-bottom-color:#fff;border-right-color:#fff;}
+.tile{display:flex;align-items:center;gap:16px;padding:9px 16px;}
+.tile canvas{width:40px;height:40px;image-rendering:pixelated;flex:none;}
+.tile .ttl{font-size:16px;font-weight:700;color:#14141e;letter-spacing:2px;}
+.tile .dsc{font-size:10px;color:#40404a;margin-top:3px;}
+.toggles{display:flex;gap:12px;margin-top:16px;}
+.chip{padding:7px 14px;font-size:10px;font-weight:700;color:#14141e;letter-spacing:1px;border-width:2px;}
+.foot{margin-top:auto;font-size:9px;color:#8fa4e8;letter-spacing:1px;text-align:center;line-height:1.9;}
+
+/* ---- game screen ---- */
+.gamewrap{display:none;width:100%;height:100%;flex-direction:column;}
+#gameCanvas{display:block;width:960px;height:600px;image-rendering:pixelated;background:#000;}
+.toolbar{height:40px;background:#a8a8ac;border-top:3px solid #fff;display:flex;align-items:center;gap:14px;padding:0 10px;}
+.toolbar .backbtn{background:#8e8e96;border-width:2px;padding:5px 12px;font-size:10px;}
+.toolbar .title{font-size:13px;font-weight:700;letter-spacing:3px;color:#14141e;}
+.toolbar .hint{margin-left:auto;font-size:9px;color:#40404a;letter-spacing:1px;}
+.toolbar .tnt{display:none;padding:5px 14px;background:#a02418;border-width:2px;border-color:#d86048 #d86048 #4a0e08 #4a0e08;border-style:solid;cursor:pointer;font-size:10px;font-weight:700;color:#f0d040;letter-spacing:1px;}
+.toolbar .tnt:hover{background:#b83020;}
+
+/* ---- overlays ---- */
+.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:40;}
+.scrim{background:rgba(4,4,10,0.45);}
+.card{background:#a8a8ac;border-top:3px solid #fff;border-left:3px solid #fff;border-bottom:3px solid #40404a;border-right:3px solid #40404a;box-shadow:10px 10px 0 rgba(0,0,0,0.4);}
+.card .bar{color:#fff;font-size:13px;font-weight:700;letter-spacing:3px;padding:8px 12px;}
+.instr-card{width:600px;}
+.instr-card .bar{background:#2038a8;}
+.instr-card .body{padding:18px 20px 20px 20px;display:flex;flex-direction:column;gap:10px;}
+.instr-card .body div{font-size:11px;color:#14141e;line-height:1.6;}
+.instr-card .body .warn{color:#8a2015;}
+.cta{align-self:center;margin-top:10px;padding:10px 26px;background:#2038a8;color:#f0c838;font-size:14px;font-weight:700;letter-spacing:3px;cursor:pointer;border-top:3px solid #4b6ae0;border-left:3px solid #4b6ae0;border-bottom:3px solid #101c58;border-right:3px solid #101c58;}
+.cta:hover{background:#2a44c4;}
+.result-card{width:520px;}
+.result-card .body{padding:20px;display:flex;flex-direction:column;gap:16px;align-items:center;}
+.result-card .body .msg{font-size:12px;color:#14141e;line-height:1.7;text-align:center;}
+.result-card .actions{display:flex;gap:14px;}
+.retry{padding:9px 20px;background:#2038a8;color:#f0c838;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;border-top:3px solid #4b6ae0;border-left:3px solid #4b6ae0;border-bottom:3px solid #101c58;border-right:3px solid #101c58;}
+.retry:hover{background:#2a44c4;}
+.tomenu{padding:9px 20px;background:#8e8e96;color:#14141e;font-size:12px;font-weight:700;letter-spacing:2px;cursor:pointer;border-top:3px solid #fff;border-left:3px solid #fff;border-bottom:3px solid #40404a;border-right:3px solid #40404a;}
+.tomenu:hover{background:#bcbcc4;}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="cabinet">
+    <div class="screen" id="screen">
+      <div class="menu" id="screenMenu">
+        <div class="banner-wrap">
+          <canvas id="bannerCanvas" width="320" height="74"></canvas>
+          <div class="wordmark">
+            <h1>OIL FEVER</h1>
+            <div class="sub">'89 &middot; <span id="txtSub"></span></div>
+          </div>
+        </div>
+        <div class="tiles">
+          <div class="btn3d tile" data-go="drill">
+            <canvas id="icoDrill" width="20" height="20"></canvas>
+            <div><div class="ttl" id="txtG1"></div><div class="dsc" id="txtG1d"></div></div>
+          </div>
+          <div class="btn3d tile" data-go="pipe">
+            <canvas id="icoPipe" width="20" height="20"></canvas>
+            <div><div class="ttl" id="txtG2"></div><div class="dsc" id="txtG2d"></div></div>
+          </div>
+          <div class="btn3d tile" data-go="fire">
+            <canvas id="icoFire" width="20" height="20"></canvas>
+            <div><div class="ttl" id="txtG3"></div><div class="dsc" id="txtG3d"></div></div>
+          </div>
+        </div>
+        <div class="toggles">
+          <div class="btn3d chip" id="btnMusic"></div>
+          <div class="btn3d chip" id="btnSfx"></div>
+          <div class="btn3d chip" id="btnLang"></div>
+        </div>
+        <div class="foot" id="txtFoot"></div>
+      </div>
+
+      <div class="gamewrap" id="screenGame">
+        <canvas id="gameCanvas" width="320" height="200"></canvas>
+        <div class="toolbar">
+          <div class="btn3d backbtn" id="btnMenu"></div>
+          <div class="title" id="txtGameTitle"></div>
+          <div class="hint" id="txtHudHint"></div>
+          <div class="tnt" id="btnPlant"></div>
+        </div>
+      </div>
+
+      <div class="overlay scrim" id="overlayInstr">
+        <div class="card instr-card">
+          <div class="bar" id="instrTitle"></div>
+          <div class="body">
+            <div id="txtI1"></div>
+            <div id="txtI2"></div>
+            <div class="warn" id="txtI3"></div>
+            <div class="cta" id="btnStart"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay" id="overlayResult">
+        <div class="card result-card">
+          <div class="bar" id="resultTitle"></div>
+          <div class="body">
+            <div class="msg" id="txtResMsg"></div>
+            <div class="actions">
+              <div class="retry" id="btnRetry"></div>
+              <div class="tomenu" id="btnMenu2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crt" id="crtOverlay"></div>
+    </div>
+    <div class="nameplate">
+      <div class="label">PETROVIA CRT-1084 COLOR</div>
+      <div class="power"><div class="led"></div><div class="label">POWER</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="./audio.js"></script>
+<script src="./games.js"></script>
+<script>
+/* ---------------------------------------------------------------------
+ * This is a plain-JS transliteration of the design tool's shell logic
+ * (screen/overlay state machine + i18n strings + button wiring). It is
+ * a 1:1 behavioral reference for re-implementing the shell in the
+ * target codebase's own framework — games.js/audio.js are unchanged
+ * and should be copied verbatim regardless of what you do with this file.
+ * ------------------------------------------------------------------- */
+const GAMES = { drill: 'DrillGame', pipe: 'PipeGame', fire: 'FireGame' };
+
+// Tweakable "props" in the original — wire these to whatever config
+// mechanism the target app uses (env, settings screen, constants, ...).
+const PROPS = { difficulty: 'normal', crt: true, volume: 0.25 };
+
+const STR = {
+en:{sub:'THREE OILFIELD ACTION GAMES',g1:'DRILLING',g1d:'Guide the bit down to the oil pocket',g2:'PIPELINE',g2d:'Lay pipe to the tank before the oil arrives',g3:'FIREFIGHTING',g3d:'Blow out a burning well with dynamite',
+ music:'MUSIC',sfx:'SFX',on:'ON',off:'OFF',menu:'MENU',plant:'SET TNT',start:'START',retry:'RETRY',win:'SUCCESS',fail:'FAILED',
+ foot:"AN ORIGINAL HOMAGE TO THE OIL-TYCOON CLASSICS OF '89 - ORIGINAL ART AND MUSIC - CLICK ANYWHERE TO ENABLE SOUND",
+ titles:{drill:'DRILLING',pipe:'PIPELINE',fire:'FIREFIGHTING'},
+ hints:{drill:'STEER: ARROWS / A-D - OR HOLD MOUSE',pipe:'CLICK CELL - OR ARROWS + SPACE',fire:'WALK: ARROWS / A-D - TNT: SPACE'},
+ instr:{drill:['Steer the drill bit down to the dark oil pocket at the bottom.','Arrow keys or A/D steer. Or hold the mouse button to pull the bit toward the pointer.','Hard rock and boulders knock the bit off course. If STRESS maxes out, the string snaps!'],
+  pipe:['Connect the well (bottom right) to the tank (top left).','Click a cell to lay the next piece from the queue. Or move the cursor with arrows and lay with SPACE. Useless pieces can be dumped on spare cells.','When the countdown hits zero the oil starts flowing. If it reaches open pipe: spill!'],
+  fire:['The well is ablaze! Blow the fire out before the derrick collapses.','Walk with arrows or A/D. SPACE sets a dynamite charge. Then RUN.','Close enough snuffs the flame. Too close at detonation, or too much HEAT, and it is over.']},
+ msgs:{gusher:'GUSHER! THE WELL COMES IN.',dry:'DRY HOLE. YOU MISSED THE POCKET.',snap:'THE DRILL STRING SNAPPED!',delivered:'OIL DELIVERED TO THE TANK!',spill:'OIL SPILL! THE FIELD IS RUINED.',capped:'FIRE OUT - WELL CAPPED!',singed:'TOO CLOSE TO THE BLAST!',late:'THE DERRICK COLLAPSED...',nodyn:'OUT OF DYNAMITE!',hot:'TOO HOT! HE HAD TO FLEE.'},
+ cv:{depth:'DEPTH',stress:'STRESS',next:'NEXT',oilin:'OIL IN',flow:'OIL FLOWING',heat:'HEAT',time:'TIME',tnt:'TNT',well:'WELL',tank:'TANK'}},
+de:{sub:'DREI OELFELD-ACTION-SPIELE',g1:'BOHREN',g1d:'Fuehre den Meissel hinab zur Oeltasche',g2:'PIPELINE',g2d:'Verlege Rohre zum Tank, bevor das Oel kommt',g3:'FEUER LOESCHEN',g3d:'Sprenge das Feuer am brennenden Turm aus',
+ music:'MUSIK',sfx:'SOUND',on:'AN',off:'AUS',menu:'MENUE',plant:'TNT LEGEN',start:'START',retry:'NOCHMAL',win:'ERFOLG',fail:'FEHLSCHLAG',
+ foot:"EINE ORIGINAL-HOMMAGE AN DIE OELBARON-KLASSIKER VON '89 - EIGENE GRAFIK UND MUSIK - FUER SOUND IRGENDWO KLICKEN",
+ titles:{drill:'BOHREN',pipe:'PIPELINE',fire:'LOESCHEN'},
+ hints:{drill:'STEUERN: PFEILE / A-D - ODER MAUS HALTEN',pipe:'ZELLE KLICKEN - ODER PFEILE + LEER',fire:'LAUFEN: PFEILE / A-D - TNT: LEERTASTE'},
+ instr:{drill:['Steuere den Bohrmeissel hinab zur dunklen Oeltasche am Grund.','Pfeiltasten oder A/D steuern. Oder Maustaste halten und den Meissel zum Zeiger ziehen.','Hartes Gestein lenkt den Meissel ab. Ist STRESS am Anschlag, bricht das Gestaenge!'],
+  pipe:['Verbinde die Quelle (unten rechts) mit dem Tank (oben links).','Klicke eine Zelle fuer das naechste Rohrstueck. Oder Pfeile + LEERTASTE. Unbrauchbare Stuecke auf freie Zellen abladen.','Laeuft der Countdown ab, fliesst das Oel. Erreicht es offenes Rohr: Oelpest!'],
+  fire:['Die Quelle brennt! Loesche das Feuer, bevor der Turm einstuerzt.','Laufen mit Pfeilen oder A/D. LEERTASTE legt eine Ladung. Dann RENN!','Nah genug erstickt die Flamme. Zu nah bei der Zuendung, oder zu viel HITZE, und aus.']},
+ msgs:{gusher:'OELFONTAENE! DIE QUELLE SPRUDELT.',dry:'TROCKENES LOCH. TASCHE VERFEHLT.',snap:'DAS GESTAENGE IST GEBROCHEN!',delivered:'OEL IM TANK ANGEKOMMEN!',spill:'OELPEST! DAS FELD IST RUINIERT.',capped:'FEUER AUS - QUELLE GESICHERT!',singed:'ZU NAH AN DER EXPLOSION!',late:'DER BOHRTURM IST EINGESTUERZT...',nodyn:'KEIN DYNAMIT MEHR!',hot:'ZU HEISS! ER MUSSTE FLIEHEN.'},
+ cv:{depth:'TIEFE',stress:'STRESS',next:'NEXT',oilin:'OEL IN',flow:'OEL FLIESST',heat:'HITZE',time:'ZEIT',tnt:'TNT',well:'QUELLE',tank:'TANK'}}};
+
+const state = { screen:'menu', overlay:'none', lang:'en', music:true, sfx:true, result:null };
+let game = null, au = null;
+
+function persist(){ try{localStorage.setItem('oilfever89-ref',JSON.stringify({lang:state.lang,music:state.music,sfx:state.sfx}));}catch(e){} }
+function loadPersisted(){ try{const p=JSON.parse(localStorage.getItem('oilfever89-ref')||'{}');
+  if(p.lang==='de')state.lang='de'; if(p.music===false)state.music=false; if(p.sfx===false)state.sfx=false; }catch(e){} }
+
+function tune(){ return state.screen==='menu' ? 'title' : state.screen; }
+
+function killGame(){ if(game){ game.destroy(); game=null; } }
+
+function mountGame(begin){
+  const canvas = document.getElementById('gameCanvas');
+  if(!GAMES[state.screen]) return;
+  killGame();
+  const L = STR[state.lang];
+  game = new window.OilGames[GAMES[state.screen]](canvas, {
+    diff: PROPS.difficulty, text: L.cv, audio: au,
+    onEnd: (res, msg) => {
+      state.overlay = 'result'; state.result = { res, msg };
+      if(au) res==='win' ? au.win() : au.fail();
+      render();
+    }
+  });
+  if(begin) game.begin();
+}
+
+function go(g){ if(au){ au.ensure(); au.ui(); au.play(g); } state.screen=g; state.overlay='instr'; state.result=null; render(); mountGame(false); }
+function toMenu(){ killGame(); state.screen='menu'; state.overlay='none'; state.result=null; if(au) au.play('title'); render(); }
+function doStart(){ if(!game) mountGame(false); state.overlay='none'; render(); if(game) game.begin(); }
+function doRetry(){ if(au) au.ui(); state.overlay='none'; state.result=null; render(); mountGame(true); }
+
+function onKey(e){
+  if(state.screen!=='menu' && ['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter'].includes(e.code)) e.preventDefault();
+  if(e.code==='Escape'){ if(state.screen!=='menu') toMenu(); return; }
+  if(state.overlay==='instr' && (e.code==='Space'||e.code==='Enter')){ doStart(); return; }
+  if(state.overlay==='result' && (e.code==='Space'||e.code==='Enter')){ doRetry(); return; }
+}
+window.addEventListener('keydown', onKey);
+window.addEventListener('pointerdown', () => { if(au){ au.ensure(); if(au.musicOn && !au.cur) au.play(tune()); } });
+
+document.querySelectorAll('.tile').forEach(el => el.addEventListener('click', () => go(el.dataset.go)));
+document.getElementById('btnMenu').addEventListener('click', toMenu);
+document.getElementById('btnMenu2').addEventListener('click', toMenu);
+document.getElementById('btnStart').addEventListener('click', doStart);
+document.getElementById('btnRetry').addEventListener('click', doRetry);
+document.getElementById('btnPlant').addEventListener('click', () => { if(game && game.plant) game.plant(); });
+document.getElementById('btnMusic').addEventListener('click', () => {
+  state.music = !state.music; persist();
+  if(au){ au.ensure(); au.setMusic(state.music); if(state.music) au.play(tune()); }
+  render();
+});
+document.getElementById('btnSfx').addEventListener('click', () => {
+  state.sfx = !state.sfx; persist();
+  if(au){ au.ensure(); au.setSfx(state.sfx); }
+  render();
+});
+document.getElementById('btnLang').addEventListener('click', () => {
+  state.lang = state.lang==='en' ? 'de' : 'en'; persist();
+  if(au) au.ui();
+  render();
+});
+
+function render(){
+  const L = STR[state.lang], g = state.screen, r = state.result;
+  document.getElementById('screenMenu').style.display = g==='menu' ? 'flex' : 'none';
+  document.getElementById('screenGame').style.display = g!=='menu' ? 'flex' : 'none';
+  document.getElementById('btnPlant').style.display = (g==='fire' && state.overlay==='none') ? 'block' : 'none';
+  document.getElementById('overlayInstr').style.display = state.overlay==='instr' ? 'flex' : 'none';
+  document.getElementById('overlayResult').style.display = state.overlay==='result' ? 'flex' : 'none';
+  document.getElementById('crtOverlay').style.display = PROPS.crt ? 'block' : 'none';
+
+  document.getElementById('txtSub').textContent = L.sub;
+  document.getElementById('txtG1').textContent = L.g1; document.getElementById('txtG1d').textContent = L.g1d;
+  document.getElementById('txtG2').textContent = L.g2; document.getElementById('txtG2d').textContent = L.g2d;
+  document.getElementById('txtG3').textContent = L.g3; document.getElementById('txtG3d').textContent = L.g3d;
+  document.getElementById('txtFoot').textContent = L.foot;
+  document.getElementById('btnMusic').textContent = L.music+': '+(state.music?L.on:L.off);
+  document.getElementById('btnSfx').textContent = L.sfx+': '+(state.sfx?L.on:L.off);
+  document.getElementById('btnLang').textContent = state.lang==='en' ? 'DEUTSCH' : 'ENGLISH';
+
+  const gameTitle = L.titles[g] || '';
+  document.getElementById('btnMenu').textContent = '< ' + L.menu + ' [ESC]';
+  document.getElementById('txtGameTitle').textContent = gameTitle;
+  document.getElementById('txtHudHint').textContent = L.hints[g] || '';
+  document.getElementById('btnPlant').textContent = L.plant + ' [SPACE]';
+
+  document.getElementById('instrTitle').textContent = gameTitle;
+  const instr = L.instr[g] || [];
+  document.getElementById('txtI1').textContent = instr[0] || '';
+  document.getElementById('txtI2').textContent = instr[1] || '';
+  document.getElementById('txtI3').textContent = instr[2] || '';
+  document.getElementById('btnStart').textContent = L.start + ' [SPACE]';
+
+  if(r){
+    document.getElementById('resultTitle').textContent = r.res==='win' ? L.win : L.fail;
+    document.getElementById('resultTitle').style.background = r.res==='win' ? '#1e7a2e' : '#a02418';
+    document.getElementById('txtResMsg').textContent = L.msgs[r.msg] || '';
+  }
+  document.getElementById('btnRetry').textContent = L.retry + ' [SPACE]';
+  document.getElementById('btnMenu2').textContent = L.menu + ' [ESC]';
+}
+
+function drawIcon(canvas, key){ const g=canvas.getContext('2d'); g.imageSmoothingEnabled=false; window.OilGames.icons[key](g); }
+
+(function init(){
+  loadPersisted();
+  au = new window.OilAudio();
+  au.setVol(PROPS.volume); au.setMusic(state.music); au.setSfx(state.sfx); au.play(tune());
+  window.OilGames.banner(document.getElementById('bannerCanvas').getContext('2d'));
+  drawIcon(document.getElementById('icoDrill'), 'drill');
+  drawIcon(document.getElementById('icoPipe'), 'pipe');
+  drawIcon(document.getElementById('icoFire'), 'fire');
+  render();
+})();
+</script>
+<!-- ===== VARIANT A — STATIC (normal games) ===== -->
+<script src="./version.js"></script>
+<nav id="game-nav" aria-label="Game navigation" style="position:fixed;right:10px;bottom:8px;z-index:2147483647;display:flex;gap:12px;align-items:center;font:600 13px/1.4 system-ui,-apple-system,sans-serif;padding:6px 11px;border-radius:8px;background:rgba(15,17,26,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);opacity:.55;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.55">
+  <span id="version-badge" title="Version" style="color:#5a6072"></span>
+  <span style="color:#5a6072" aria-hidden="true">·</span>
+  <a href="https://github.freaxnx01.ch/games/" style="color:#8fd8e8;text-decoration:none">More Games…</a>
+  <span style="color:#5a6072" aria-hidden="true">·</span>
+  <a href="https://github.com/freaxnx01/game-oil-fever-89" target="_blank" rel="noopener" style="color:#8fd8e8;text-decoration:none">Source</a>
+  <span style="color:#5a6072" aria-hidden="true">·</span>
+  <a href="https://github.com/freaxnx01/game-oil-fever-89/issues/new?title=%5BFeedback%5D%20game-oil-fever-89&labels=feedback" target="_blank" rel="noopener" style="color:#8fd8e8;text-decoration:none">Feedback</a>
+  <span style="color:#5a6072" aria-hidden="true">·</span>
+  <a class="github-button" href="https://github.com/freaxnx01/game-oil-fever-89" data-icon="octicon-star" data-size="small" data-show-count="true" aria-label="Star freaxnx01/game-oil-fever-89 on GitHub">Star</a>
+</nav>
+<script>
+  // Version badge → CHANGELOG. Text comes only from window.GAME_VERSION so
+  // version.js stays the single source (never hardcode the literal here).
+  (function () {
+    var el = document.getElementById('version-badge');
+    if (!el) return;
+    var a = document.createElement('a');
+    a.href = 'https://github.com/freaxnx01/game-oil-fever-89/blob/main/CHANGELOG.md';
+    a.target = '_blank'; a.rel = 'noopener'; a.title = 'Changelog';
+    a.textContent = 'v' + (window.GAME_VERSION || '0.0.0');
+    a.style.color = 'inherit'; a.style.textDecoration = 'none';
+    el.appendChild(a);
+  })();
+</script>
+<script async defer crossorigin="anonymous" src="https://buttons.github.io/buttons.js"></script>
+
+
+
+</body>
+</html>
