@@ -171,7 +171,7 @@ class PipeGame extends Base{
   this.grid={};this.startC=[7,4];this.tankC=[0,0];
   this.cd={easy:20,normal:15,hard:11}[d]||15;this.cdActive=true;
   this.speed={easy:2.4,normal:2.0,hard:1.6}[d]||2.0;
-  const types=['H','V','NE','NW','SE','SW','H','V','NE','NW','SE','SW','X'];
+  const types=['H','V','NE','NW','SE','SW','H','V','NE','NW','SE','SW','X','X'];
   this.queue=[];for(let i=0;i<64;i++)this.queue.push(types[(R()*types.length)|0]);
   const okFirst=t=>CONN[t].includes(2);
   if(!okFirst(this.queue[0])){const j=this.queue.findIndex(okFirst);const t=this.queue.splice(j,1)[0];this.queue.unshift(t);}
